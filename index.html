@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mood &amp; Stress Diary</title>
+<meta name="description" content="A private daily mood and stress diary. Entries stay on your phone.">
+<meta name="theme-color" content="#11456B">
+<meta name="color-scheme" content="light dark">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mood Diary">
+<link rel="preload" href="fonts/lato-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:'Lato';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/lato-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Lato';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/lato-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Lato';font-style:normal;font-weight:900;font-display:swap;src:url(fonts/lato-latin-900-normal.woff2) format('woff2')}
+@font-face{font-family:'Cormorant Garamond';font-style:italic;font-weight:600;font-display:swap;src:url(fonts/cormorant-garamond-latin-600-italic.woff2) format('woff2')}
+@font-face{font-family:'Cormorant Garamond';font-style:italic;font-weight:700;font-display:swap;src:url(fonts/cormorant-garamond-latin-700-italic.woff2) format('woff2')}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;padding-top:env(safe-area-inset-top,0px)}
+[hidden]{display:none!important}
+</style>
+<style>
+/* Layout: one phone-first column — calendar to tap, a day editor, the month's trend, then calming skills and helplines */
+:root{
+  --bg:#FFFDF8; --surface:#FFFFFF; --sunk:#F5F1E8; --line:#D9DEE2; --line-strong:#9AA6AE;
+  --ink:#1E2A33; --muted:#4E5B64; --navy:#11456B; --teal:#1F6F78; --amber:#8A520A; --amber-soft:#FFF3E2; --teal-soft:#EAF4F4;
+  --m2:#1F6F78; --m1:#7FB7B3; --m0:#E8DFC9; --mn1:#E7A55A; --mn2:#A2481C;
+  --m2-ink:#FFFFFF; --m1-ink:#0E2E31; --m0-ink:#3A3020; --mn1-ink:#3A1E00; --mn2-ink:#FFFFFF;
+  --stress:#C26A12; --focus:#11456B;
+  --display:'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --body:'Lato', 'Segoe UI', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12181D; --surface:#1A2229; --sunk:#202A32; --line:#33414B; --line-strong:#5B6B76;
+  --ink:#E8EDF0; --muted:#A9B6BE; --navy:#9CC7EA; --teal:#7FC6CC; --amber:#F0B46A; --amber-soft:#2B2116; --teal-soft:#16292B;
+  --m2:#4FB3B5; --m1:#2E6E6C; --m0:#5A5242; --mn1:#B9752F; --mn2:#E58A55;
+  --m2-ink:#06191A; --m1-ink:#E6F4F3; --m0-ink:#F3ECDD; --mn1-ink:#1A0E00; --mn2-ink:#1A0800;
+  --stress:#F0A04B; --focus:#9CC7EA; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12181D; --surface:#1A2229; --sunk:#202A32; --line:#33414B; --line-strong:#5B6B76;
+  --ink:#E8EDF0; --muted:#A9B6BE; --navy:#9CC7EA; --teal:#7FC6CC; --amber:#F0B46A; --amber-soft:#2B2116; --teal-soft:#16292B;
+  --m2:#4FB3B5; --m1:#2E6E6C; --m0:#5A5242; --mn1:#B9752F; --mn2:#E58A55;
+  --m2-ink:#06191A; --m1-ink:#E6F4F3; --m0-ink:#F3ECDD; --mn1-ink:#1A0E00; --mn2-ink:#1A0800;
+  --stress:#F0A04B; --focus:#9CC7EA; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:20px 40px;position:relative;overflow-x:hidden}
+.flower{position:absolute;top:0;right:0;width:200px;max-width:45%;opacity:.12;pointer-events:none;transform:scaleX(-1)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .flower{opacity:.07}}
+:root[data-theme="dark"] .flower{opacity:.07}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:20px;position:relative}
+h1,h2,h3{margin:0;text-wrap:balance}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+
+header.top{display:flex;align-items:center;gap:14px;padding-bottom:12px;border-bottom:2px solid var(--navy)}
+header.top img{width:56px;height:56px;object-fit:contain;flex-shrink:0}
+header.top h1{font-size:24px;font-weight:900;color:var(--navy);line-height:1.15}
+header.top p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.privacy{font-size:13px;color:var(--muted);background:var(--sunk);border-radius:8px;padding:10px 12px;margin:0}
+
+.label{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.09em;color:var(--navy)}
+section{display:flex;flex-direction:column;gap:10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px}
+
+.monthbar{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.monthbar h2{font-size:18px;font-weight:900;color:var(--ink)}
+.navbtn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:grid;place-items:center}
+.navbtn:hover{background:var(--sunk)}
+.navbtn:disabled{opacity:.35;cursor:default}
+.navbtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.wd{font-size:11px;font-weight:700;color:var(--teal);text-align:center;padding-bottom:2px}
+.day{position:relative;aspect-ratio:1/1;min-height:40px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;font-variant-numeric:tabular-nums;padding:0}
+.day .n{font-size:14px;font-weight:700;line-height:1}
+.day .ml{font-size:9px;font-weight:700;line-height:1.1;margin-top:2px;letter-spacing:.02em}
+.day:hover:not(:disabled){border-color:var(--line-strong)}
+.day:disabled{cursor:default;opacity:.4}
+.day.today{border:2px solid var(--navy)}
+.day.sel{box-shadow:0 0 0 3px var(--focus)}
+.day .dot{position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--stress);border:1px solid var(--surface)}
+.m2{background:var(--m2);color:var(--m2-ink);border-color:transparent}
+.m1{background:var(--m1);color:var(--m1-ink);border-color:transparent}
+.m0{background:var(--m0);color:var(--m0-ink);border-color:transparent}
+.mn1{background:var(--mn1);color:var(--mn1-ink);border-color:transparent}
+.mn2{background:var(--mn2);color:var(--mn2-ink);border-color:transparent}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.legend i.s{border-radius:50%;width:8px;height:8px;background:var(--stress)}
+
+.editor h3{font-size:17px;font-weight:900;color:var(--ink)}
+.moods{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.moodbtn{min-height:52px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:12px;font-weight:700;padding:4px 2px;line-height:1.15;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.moodbtn i{width:18px;height:18px;border-radius:50%;display:block}
+.moodbtn[aria-pressed="true"]{border-width:2px;border-color:var(--ink)}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:13px;font-weight:700;color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+input[type=number],textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:10px 12px;min-height:44px}
+input[type=number]{width:110px}
+textarea{width:100%;min-height:64px;resize:vertical}
+.check{display:flex;align-items:center;gap:10px;min-height:44px;cursor:pointer;font-weight:700;color:var(--amber)}
+.check input{width:22px;height:22px;accent-color:var(--stress)}
+.stressbox{border-left:0;background:var(--amber-soft);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.status{font-size:12px;color:var(--muted);min-height:18px}
+.ghost{background:none;border:1px solid var(--line-strong);border-radius:8px;padding:8px 14px;min-height:44px;cursor:pointer;font-weight:700;font-size:13px}
+.ghost:hover{background:var(--sunk)}
+
+.chartbox{overflow-x:auto}
+.chartbox svg{display:block;width:100%;min-width:320px;height:auto}
+.empty{color:var(--muted);font-size:14px;margin:0;padding:16px 0;text-align:center}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat{background:var(--sunk);border-radius:8px;padding:8px 10px}
+.stat b{display:block;font-size:20px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+
+.stresslist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.stresslist li{display:grid;grid-template-columns:54px minmax(0,1fr);gap:8px;font-size:14px;border-bottom:1px dashed var(--line);padding-bottom:8px}
+.stresslist .d{font-weight:900;color:var(--amber);font-variant-numeric:tabular-nums}
+.stresslist .c{color:var(--muted);font-size:13px}
+
+.share{display:flex;flex-wrap:wrap;gap:8px}
+.primary{background:var(--navy);color:var(--bg);border:0;border-radius:8px;padding:10px 16px;min-height:44px;font-weight:900;cursor:pointer}
+.primary:hover{filter:brightness(1.08)}
+#copyArea{width:100%;min-height:160px;font-size:13px}
+
+.skills{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.skill{border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.skill.hyper{background:var(--amber-soft);border:1px solid var(--mn1)}
+.skill.hypo{background:var(--teal-soft);border:1px solid var(--m1)}
+.skill h3{font-size:16px;font-weight:900}
+.skill.hyper h3{color:var(--amber)} .skill.hypo h3{color:var(--teal)}
+.skill .sub{font-size:13px;font-style:italic;color:var(--muted);margin:0}
+.skill ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px;font-size:14px}
+.skill li b{font-weight:700}
+
+.helplines{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.hl{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:1px}
+.hl .nm{font-size:13px;font-weight:900;color:var(--teal)}
+.hl .num{font-size:20px;font-weight:900;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.hl .num.long{font-size:17px}
+.hl .ds{font-size:12px;color:var(--muted)}
+
+.quotes{text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;padding:8px 4px}
+.q1{font-family:var(--display);font-style:italic;font-weight:700;font-size:22px;line-height:1.3;color:var(--navy);max-width:34ch;text-wrap:balance;margin:0}
+.rule{width:44px;height:2px;background:var(--mn1)}
+.q2{font-size:13px;font-style:italic;color:var(--muted);max-width:52ch;margin:0;text-wrap:balance}
+.q2 .semi{font-style:normal;font-weight:900;color:var(--navy);font-size:17px}
+footer{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);padding-top:12px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+footer img{width:32px;height:32px;object-fit:contain}
+footer b{color:var(--navy)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+a.hl{text-decoration:none;color:inherit;cursor:pointer}
+a.hl:hover,a.hl:active{border-color:var(--teal);background:var(--teal-soft)}
+.hl .call{font-size:11px;font-weight:700;color:var(--teal);margin-top:3px;display:inline-flex;align-items:center;gap:4px}
+.hl .call svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.install{display:flex;align-items:center;gap:10px;justify-content:space-between;background:var(--teal-soft);border:1px solid var(--m1);border-radius:8px;padding:10px 12px;font-size:13px}
+.install b{color:var(--teal)}
+.small{font-size:13px;color:var(--muted);margin:0}
+#restoreFile{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <img src="logo.png" alt="Dr Athul Raj E R logo">
+    <div>
+      <h1>My Mood &amp; Stress Diary</h1>
+      <p>Log one moment a day. Bring your summary to your next visit.</p>
+    </div>
+  </header>
+  <p class="privacy">Your entries are saved only on this phone. Nothing is sent anywhere, and no one else can see them, including your doctor, unless you choose to share your summary. Uninstalling the app or clearing its data erases them, so make a backup now and then.</p>
+  <div class="install" id="installBar" hidden><span><b>Install this diary</b> as an app on your phone.</span><button class="primary" id="installBtn" type="button">Install</button></div>
+
+  <section aria-labelledby="calHead">
+    <div class="monthbar">
+      <button class="navbtn" id="prevM" type="button" aria-label="Previous month"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <h2 id="calHead">Month</h2>
+      <button class="navbtn" id="nextM" type="button" aria-label="Next month"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+    </div>
+    <div class="cal" id="cal" role="grid" aria-labelledby="calHead"></div>
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <section class="card editor" aria-labelledby="dayTitle">
+    <h3 id="dayTitle">Today</h3>
+    <div class="field">
+      <span class="label" id="moodQ">How was your mood overall?</span>
+      <div class="moods" id="moods" role="group" aria-labelledby="moodQ"></div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="sleep">Hours slept</label>
+        <input type="number" id="sleep" min="0" max="24" step="0.5" inputmode="decimal" placeholder="e.g. 7">
+      </div>
+    </div>
+    <label class="check" for="stressChk"><input type="checkbox" id="stressChk"> Something stressful happened</label>
+    <div class="stressbox" id="stressBox" hidden>
+      <div class="field">
+        <label for="what">What happened?</label>
+        <textarea id="what" placeholder="A few words are enough"></textarea>
+      </div>
+      <div class="field">
+        <label for="cope">How did I cope?</label>
+        <textarea id="cope" placeholder="What helped, even a little"></textarea>
+      </div>
+    </div>
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div class="status" id="status" aria-live="polite"></div>
+      <button class="ghost" id="clearDay" type="button">Clear this day</button>
+    </div>
+  </section>
+
+  <section aria-labelledby="trendHead">
+    <span class="label" id="trendHead">This month at a glance</span>
+    <div class="stats" id="stats"></div>
+    <div class="card chartbox" id="chartBox"></div>
+  </section>
+
+  <section aria-labelledby="stressHead">
+    <span class="label" id="stressHead" style="color:var(--amber)">Stressors I noticed</span>
+    <div class="card"><ul class="stresslist" id="stressList"></ul></div>
+  </section>
+
+  <section aria-labelledby="shareHead">
+    <span class="label" id="shareHead">Share with your doctor</span>
+    <div class="share">
+      <button class="primary" id="shareBtn" type="button" hidden>Share month summary</button>
+      <button class="ghost" id="copyBtn" type="button">Copy summary</button>
+      <button class="ghost" id="saveBtn" type="button">Save as a file</button>
+    </div>
+    <div class="status" id="shareStatus" aria-live="polite"></div>
+    <textarea id="copyArea" readonly hidden aria-label="Month summary to copy"></textarea>
+  </section>
+
+  <section aria-labelledby="backupHead">
+    <span class="label" id="backupHead">Backup</span>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px">
+      <p class="small">Save a copy of all your entries, for example to Google Drive or WhatsApp, so you can restore them on a new phone.</p>
+      <div class="share">
+        <button class="ghost" id="backupBtn" type="button">Back up all entries</button>
+        <button class="ghost" id="restoreBtn" type="button">Restore from backup</button>
+        <input type="file" id="restoreFile" accept=".json,application/json" tabindex="-1" aria-hidden="true">
+      </div>
+      <div class="status" id="backupStatus" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="skillsHead">
+    <span class="label" id="skillsHead">Calming skills: back to my window of tolerance</span>
+    <div class="skills">
+      <div class="skill hyper">
+        <h3>When I feel too much</h3>
+        <p class="sub">Hyperarousal: racing heart, panic, anger, restless, can’t switch off</p>
+        <ul>
+          <li><b>Slow breathing</b>: in for 4, out for 6–8, for 2–3 minutes</li>
+          <li><b>Box breathing</b>: in 4, hold 4, out 4, hold 4</li>
+          <li><b>5-4-3-2-1 grounding</b>: name 5 things you see, 4 you hear, 3 you feel, 2 you smell, 1 you taste</li>
+          <li><b>Muscle relaxation</b>: tense each muscle group for 5 seconds, then release</li>
+          <li><b>Butterfly hug</b>: cross your arms and tap your shoulders slowly, left and right</li>
+        </ul>
+      </div>
+      <div class="skill hypo">
+        <h3>When I feel too little</h3>
+        <p class="sub">Hypoarousal: numb, empty, foggy, heavy, shut down</p>
+        <ul>
+          <li><b>Move</b>: stand up, stretch, walk briskly or shake out your arms</li>
+          <li><b>Orient</b>: look around the room and name 5 colours aloud</li>
+          <li><b>Energising breath</b>: a quick sniff in through the nose, a long sigh out</li>
+          <li><b>Engage the senses</b>: upbeat music, a strong scent, a textured object</li>
+          <li><b>Connect</b>: call or message someone you feel safe with</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="helpHead">
+    <span class="label" id="helpHead">Need to talk? Free helplines</span>
+    <div class="helplines">
+      <a class="hl" href="tel:14416" aria-label="Call Tele MANAS, 14416"><span class="nm">Tele MANAS</span><span class="num">14416</span><span class="ds">Mental health, 24×7</span><span class="call"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Tap to call</span></a>
+      <a class="hl" href="tel:1056" aria-label="Call DISHA, 1056"><span class="nm">DISHA</span><span class="num">1056</span><span class="ds">Health helpline</span><span class="call"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Tap to call</span></a>
+      <a class="hl" href="tel:181" aria-label="Call Mitra, 181"><span class="nm">Mitra</span><span class="num">181</span><span class="ds">Women helpline</span><span class="call"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Tap to call</span></a>
+      <a class="hl" href="tel:1098" aria-label="Call Childline, 1098"><span class="nm">Childline</span><span class="num">1098</span><span class="ds">Children in need</span><span class="call"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Tap to call</span></a>
+      <a class="hl" href="tel:18004252147" aria-label="Call Transgender Cell, 1800 425 2147"><span class="nm">Transgender Cell</span><span class="num long">1800 425 2147</span><span class="ds">Toll-free helpline</span><span class="call"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Tap to call</span></a>
+    </div>
+  </section>
+
+  <div class="quotes">
+    <p class="q1">“You are the expert on your own experience. With safety, choice and collaboration, we work together towards healing.”</p>
+    <div class="rule"></div>
+    <p class="q2"><span class="semi">;</span> “A semicolon is used when an author could have ended their sentence but chose not to. The author is you, and the sentence is your life.” <b style="font-style:normal">Project Semicolon</b></p>
+  </div>
+
+  <footer>
+    <img src="logo.png" alt="">
+    <div><b>Dr Athul Raj E R</b><br>MBBS, DNB (Psychiatry), MNAMS · www.psychiatristathul.com<br><a href="privacy.html" style="color:var(--muted)">Privacy policy</a></div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  const KEY = 'moodDiary.v1';
+  const MOODS = [
+    {v:2,  label:'Very good', cls:'m2',  short:'V.good'},
+    {v:1,  label:'Good',      cls:'m1',  short:'Good'},
+    {v:0,  label:'Okay',      cls:'m0',  short:'Okay'},
+    {v:-1, label:'Low',       cls:'mn1', short:'Low'},
+    {v:-2, label:'Very low',  cls:'mn2', short:'V.low'}
+  ];
+  const moodBy = v => MOODS.find(m => m.v === v);
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const WD = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+  let store = {};
+  try { store = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { store = {}; }
+
+  const now = new Date();
+  const today = {y: now.getFullYear(), m: now.getMonth(), d: now.getDate()};
+  let cur = {y: today.y, m: today.m};
+  let sel = today.d;
+
+  const $ = id => document.getElementById(id);
+  const mk = () => cur.y + '-' + String(cur.m + 1).padStart(2, '0');
+  const daysIn = (y, m) => new Date(y, m + 1, 0).getDate();
+  const isFuture = d => (cur.y > today.y) || (cur.y === today.y && cur.m > today.m) || (cur.y === today.y && cur.m === today.m && d > today.d);
+  const monthData = () => store[mk()] || {};
+  const entry = d => monthData()[d] || null;
+
+  function persist(msg){
+    try { localStorage.setItem(KEY, JSON.stringify(store)); $('status').textContent = msg || 'Saved on this device'; }
+    catch (e) { $('status').textContent = 'This browser is not letting the diary save. Copy your summary before you close the page.'; }
+  }
+  function setEntry(d, patch){
+    const k = mk();
+    const md = store[k] || {};
+    const e = Object.assign({}, md[d] || {}, patch);
+    Object.keys(e).forEach(x => { if (e[x] === '' || e[x] === null || e[x] === undefined || e[x] === false) delete e[x]; });
+    if (Object.keys(e).length) md[d] = e; else delete md[d];
+    if (Object.keys(md).length) store[k] = md; else delete store[k];
+    persist();
+    renderCal(); renderTrend();
+  }
+
+  // Legend
+  $('legend').innerHTML = MOODS.map(m => '<span><i class="' + m.cls + '"></i>' + m.label + '</span>').join('') + '<span><i class="s"></i>Stressor</span>';
+
+  // Mood buttons
+  $('moods').innerHTML = MOODS.map(m => '<button type="button" class="moodbtn" data-v="' + m.v + '" aria-pressed="false"><i class="' + m.cls + '"></i>' + m.label + '</button>').join('');
+  $('moods').addEventListener('click', ev => {
+    const b = ev.target.closest('.moodbtn'); if (!b) return;
+    const v = Number(b.dataset.v);
+    const e = entry(sel);
+    setEntry(sel, {mood: (e && e.mood === v) ? null : v});
+    renderEditor();
+  });
+
+  function renderCal(){
+    $('calHead').textContent = MONTHS[cur.m] + ' ' + cur.y;
+    $('nextM').disabled = (cur.y === today.y && cur.m >= today.m) || cur.y > today.y;
+    const first = (new Date(cur.y, cur.m, 1).getDay() + 6) % 7;
+    const n = daysIn(cur.y, cur.m);
+    let h = WD.map(w => '<div class="wd" aria-hidden="true">' + w.charAt(0) + '</div>').join('');
+    for (let i = 0; i < first; i++) h += '<div aria-hidden="true"></div>';
+    for (let d = 1; d <= n; d++){
+      const e = entry(d); const m = e && e.mood !== undefined ? moodBy(e.mood) : null;
+      const cls = ['day', m ? m.cls : '', (cur.y === today.y && cur.m === today.m && d === today.d) ? 'today' : '', d === sel ? 'sel' : ''].join(' ');
+      const lab = d + ' ' + MONTHS[cur.m] + (m ? ', ' + m.label : ', not logged') + (e && e.stress ? ', stressor noted' : '');
+      h += '<button type="button" class="' + cls + '" data-d="' + d + '" aria-label="' + lab + '"' + (isFuture(d) ? ' disabled' : '') + (d === sel ? ' aria-current="date"' : '') + '>' +
+           '<span class="n">' + d + '</span>' + (m ? '<span class="ml">' + m.short + '</span>' : '') + (e && e.stress ? '<span class="dot"></span>' : '') + '</button>';
+    }
+    $('cal').innerHTML = h;
+  }
+  $('cal').addEventListener('click', ev => {
+    const b = ev.target.closest('.day'); if (!b || b.disabled) return;
+    sel = Number(b.dataset.d); $('status').textContent = '';
+    renderCal(); renderEditor();
+  });
+
+  function renderEditor(){
+    const dt = new Date(cur.y, cur.m, sel);
+    const isToday = cur.y === today.y && cur.m === today.m && sel === today.d;
+    $('dayTitle').textContent = (isToday ? 'Today, ' : '') + dt.toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'long'});
+    const e = entry(sel) || {};
+    document.querySelectorAll('.moodbtn').forEach(b => {
+      const on = e.mood === Number(b.dataset.v);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.className = 'moodbtn' + (on ? ' ' + moodBy(e.mood).cls : '');
+    });
+    $('sleep').value = e.sleep !== undefined ? e.sleep : '';
+    $('stressChk').checked = !!e.stress;
+    $('stressBox').hidden = !e.stress;
+    $('what').value = e.what || '';
+    $('cope').value = e.cope || '';
+  }
+
+  $('sleep').addEventListener('change', () => {
+    const v = $('sleep').value.trim();
+    const n = v === '' ? null : Math.max(0, Math.min(24, Number(v)));
+    setEntry(sel, {sleep: (n === null || isNaN(n)) ? null : n});
+  });
+  $('stressChk').addEventListener('change', () => {
+    const on = $('stressChk').checked;
+    $('stressBox').hidden = !on;
+    setEntry(sel, on ? {stress: true} : {stress: null, what: null, cope: null});
+    if (!on) { $('what').value = ''; $('cope').value = ''; }
+  });
+  let t;
+  ['what','cope'].forEach(id => $(id).addEventListener('input', () => {
+    clearTimeout(t);
+    $('status').textContent = 'Saving…';
+    t = setTimeout(() => setEntry(sel, {[id]: $(id).value.trim() || null, stress: true}), 500);
+  }));
+  $('clearDay').addEventListener('click', () => {
+    const md = store[mk()];
+    if (md) { delete md[sel]; if (!Object.keys(md).length) delete store[mk()]; }
+    persist('Day cleared');
+    renderCal(); renderEditor(); renderTrend();
+  });
+
+  $('prevM').addEventListener('click', () => { cur.m--; if (cur.m < 0) { cur.m = 11; cur.y--; } sel = Math.min(sel, daysIn(cur.y, cur.m)); if (cur.y === today.y && cur.m === today.m) sel = today.d; $('status').textContent=''; renderAll(); });
+  $('nextM').addEventListener('click', () => { cur.m++; if (cur.m > 11) { cur.m = 0; cur.y++; } sel = (cur.y === today.y && cur.m === today.m) ? today.d : Math.min(sel, daysIn(cur.y, cur.m)); $('status').textContent=''; renderAll(); });
+
+  function summaryStats(){
+    const md = monthData(); const n = daysIn(cur.y, cur.m);
+    let logged = 0, sum = 0, low = 0, sl = 0, slN = 0, st = 0;
+    for (let d = 1; d <= n; d++){ const e = md[d]; if (!e) continue;
+      if (e.mood !== undefined) { logged++; sum += e.mood; if (e.mood < 0) low++; }
+      if (e.sleep !== undefined) { sl += e.sleep; slN++; }
+      if (e.stress) st++; }
+    return {logged, avg: logged ? sum / logged : null, low, sleep: slN ? sl / slN : null, stress: st, n};
+  }
+  function avgLabel(a){ if (a === null) return '–'; const r = Math.round(a); return moodBy(Math.max(-2, Math.min(2, r))).label; }
+
+  function renderTrend(){
+    const s = summaryStats();
+    $('stats').innerHTML =
+      '<div class="stat"><b>' + s.logged + '</b><span>days logged</span></div>' +
+      '<div class="stat"><b>' + s.low + '</b><span>low days</span></div>' +
+      '<div class="stat"><b>' + (s.sleep === null ? '–' : s.sleep.toFixed(1)) + '</b><span>avg hours slept</span></div>';
+
+    const md = monthData(); const n = s.n;
+    const pts = []; for (let d = 1; d <= n; d++) if (md[d] && md[d].mood !== undefined) pts.push([d, md[d].mood]);
+    const sdays = []; for (let d = 1; d <= n; d++) if (md[d] && md[d].stress) sdays.push(d);
+    if (!pts.length && !sdays.length){
+      $('chartBox').innerHTML = '<p class="empty">Tap a day in the calendar and choose your mood. Your month’s pattern will show here.</p>';
+    } else {
+      const W = 600, H = 210, pl = 70, pr = 14, pt = 12, pb = 40;
+      const x = d => pl + (d - 1) * (W - pl - pr) / (n - 1);
+      const y = v => pt + (2 - v) * (H - pt - pb) / 4;
+      let g = '';
+      MOODS.forEach(m => {
+        g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y(m.v) + '" y2="' + y(m.v) + '" style="stroke:var(--line)" stroke-width="1"/>';
+        g += '<text x="' + (pl - 8) + '" y="' + (y(m.v) + 4) + '" text-anchor="end" font-size="12" style="fill:var(--muted)" font-family="Lato, sans-serif">' + m.label + '</text>';
+      });
+      [1,5,10,15,20,25,30].filter(d => d <= n).forEach(d => {
+        g += '<text x="' + x(d) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="11" style="fill:var(--muted)" font-family="Lato, sans-serif">' + d + '</text>';
+      });
+      sdays.forEach(d => {
+        const cx = x(d), by = H - pb + 12;
+        g += '<path d="M' + (cx - 5) + ' ' + (by + 5) + ' L' + cx + ' ' + (by - 4) + ' L' + (cx + 5) + ' ' + (by + 5) + ' Z" style="fill:var(--stress)"><title>Stressor on ' + d + '</title></path>';
+      });
+      if (pts.length > 1) g += '<polyline points="' + pts.map(p => x(p[0]) + ',' + y(p[1])).join(' ') + '" fill="none" style="stroke:var(--navy)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+      pts.forEach(p => {
+        g += '<circle cx="' + x(p[0]) + '" cy="' + y(p[1]) + '" r="5" style="fill:var(--' + moodBy(p[1]).cls + ');stroke:var(--navy)" stroke-width="1.5"><title>' + p[0] + ': ' + moodBy(p[1]).label + '</title></circle>';
+      });
+      $('chartBox').innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Mood across ' + MONTHS[cur.m] + ', with stressor days marked">' + g + '</svg>';    }
+
+    const items = [];
+    for (let d = 1; d <= n; d++){ const e = md[d]; if (e && e.stress) items.push([d, e]); }
+    $('stressList').innerHTML = items.length ? items.map(([d, e]) =>
+      '<li><span class="d">' + d + ' ' + MONTHS[cur.m].slice(0,3) + '</span><span>' + esc(e.what || 'Stressful day (no note)') +
+      (e.cope ? '<br><span class="c">Coped by: ' + esc(e.cope) + '</span>' : '') + '</span></li>').join('')
+      : '<li style="border:0;display:block" class="c">Tick “Something stressful happened” on a day to add it here.</li>';
+  }
+  function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  function summaryText(){
+    const s = summaryStats(); const md = monthData();
+    const L = [];
+    L.push('Mood & Stress Diary: ' + MONTHS[cur.m] + ' ' + cur.y);
+    L.push('Days logged: ' + s.logged + ' of ' + s.n);
+    L.push('Average mood: ' + avgLabel(s.avg) + (s.avg === null ? '' : ' (' + s.avg.toFixed(1) + ' on a scale of -2 to +2)'));
+    L.push('Low or very low days: ' + s.low);
+    L.push('Average sleep: ' + (s.sleep === null ? 'not recorded' : s.sleep.toFixed(1) + ' hours'));
+    L.push('Days with a stressor: ' + s.stress);
+    L.push(''); L.push('Day by day:');
+    for (let d = 1; d <= s.n; d++){ const e = md[d]; if (!e) continue;
+      const parts = [];
+      if (e.mood !== undefined) parts.push(moodBy(e.mood).label);
+      if (e.sleep !== undefined) parts.push('slept ' + e.sleep + ' h');
+      if (e.stress) parts.push('stressor');
+      L.push('  ' + d + ' ' + MONTHS[cur.m].slice(0,3) + ': ' + parts.join(', '));
+    }
+    const st = []; for (let d = 1; d <= s.n; d++){ const e = md[d]; if (e && e.stress) st.push('  ' + d + ' ' + MONTHS[cur.m].slice(0,3) + ': ' + (e.what || 'no note') + (e.cope ? ' | Coped by: ' + e.cope : '')); }
+    if (st.length){ L.push(''); L.push('Stressors:'); L.push(...st); }
+    return L.join('\n');
+  }
+
+  const say = (id, msg) => { $(id).textContent = msg; };
+  const fileName = () => 'mood-diary-' + mk() + '.txt';
+
+  function downloadBlob(blob, name){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1500);
+  }
+  async function shareOrSave(blob, name, title, statusId, savedMsg){
+    const file = new File([blob], name, {type: blob.type});
+    if (navigator.canShare && navigator.canShare({files: [file]})) {
+      try { await navigator.share({files: [file], title}); say(statusId, 'Shared.'); return; }
+      catch (e) { if (e && e.name === 'AbortError') { say(statusId, 'Not shared.'); return; } }
+    }
+    downloadBlob(blob, name); say(statusId, savedMsg);
+  }
+
+  // Share the summary as text (opens WhatsApp, email and other apps)
+  if (navigator.share) $('shareBtn').hidden = false;
+  else { $('copyBtn').classList.replace('ghost', 'primary'); }
+  $('shareBtn').addEventListener('click', async () => {
+    try { await navigator.share({title: 'Mood & Stress Diary, ' + MONTHS[cur.m] + ' ' + cur.y, text: summaryText()}); say('shareStatus', 'Shared.'); }
+    catch (e) { if (!(e && e.name === 'AbortError')) say('shareStatus', 'Sharing did not work here. Use Copy summary instead.'); }
+  });
+
+  $('copyBtn').addEventListener('click', () => {
+    const txt = summaryText();
+    const fallback = () => { const a = $('copyArea'); a.value = txt; a.hidden = false; a.focus(); a.select(); say('shareStatus', 'Select all the text below and copy it.'); };
+    try {
+      navigator.clipboard.writeText(txt).then(() => { say('shareStatus', 'Summary copied. Paste it into WhatsApp or an email to share it.'); $('copyArea').hidden = true; }, fallback);
+    } catch (e) { fallback(); }
+  });
+
+  $('saveBtn').addEventListener('click', () => {
+    downloadBlob(new Blob([summaryText()], {type: 'text/plain'}), fileName());
+    say('shareStatus', 'Saved to your Downloads folder.');
+  });
+
+  // Full backup and restore of every entry
+  $('backupBtn').addEventListener('click', () => {
+    const d = new Date();
+    const stamp = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    const data = JSON.stringify({app: 'mood-diary', version: 1, saved: d.toISOString(), entries: store}, null, 1);
+    shareOrSave(new Blob([data], {type: 'application/json'}), 'mood-diary-backup-' + stamp + '.json',
+      'Mood diary backup', 'backupStatus', 'Backup saved to your Downloads folder.');
+  });
+  $('restoreBtn').addEventListener('click', () => $('restoreFile').click());
+  $('restoreFile').addEventListener('change', async ev => {
+    const f = ev.target.files && ev.target.files[0]; ev.target.value = '';
+    if (!f) return;
+    try {
+      const parsed = JSON.parse(await f.text());
+      const entries = parsed && parsed.app === 'mood-diary' ? parsed.entries : null;
+      if (!entries || typeof entries !== 'object') throw new Error('bad');
+      let added = 0;
+      for (const m of Object.keys(entries)) {
+        if (!/^\d{4}-\d{2}$/.test(m) || typeof entries[m] !== 'object') continue;
+        store[m] = store[m] || {};
+        for (const day of Object.keys(entries[m])) {
+          if (!store[m][day]) { store[m][day] = entries[m][day]; added++; }
+        }
+      }
+      persist('Saved on this device');
+      renderAll();
+      say('backupStatus', added ? 'Restored ' + added + ' day' + (added === 1 ? '' : 's') + '. Days already on this phone were kept as they are.' : 'Nothing new to restore. Every day in the backup is already on this phone.');
+    } catch (e) { say('backupStatus', 'That file is not a mood diary backup.'); }
+  });
+
+  // Ask the browser to keep the diary's storage safe from automatic clean-up
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+
+  // Install prompt (Android Chrome)
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; $('installBar').hidden = false; });
+  $('installBtn').addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    try { await deferredPrompt.userChoice; } catch (e) {}
+    deferredPrompt = null; $('installBar').hidden = true;
+  });
+  window.addEventListener('appinstalled', () => { $('installBar').hidden = true; });
+
+  function renderAll(){ renderCal(); renderEditor(); renderTrend(); }
+  renderAll();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
+</script>
+
+</body></html>
